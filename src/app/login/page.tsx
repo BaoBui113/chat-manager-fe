@@ -105,7 +105,11 @@ export default function LoginPage() {
             </CardContent>
 
             <CardFooter className="flex flex-col space-y-4">
-              <Button type="submit" className="w-full" disabled={isPending}>
+              <Button
+                type="submit"
+                className="w-full mt-4"
+                disabled={isPending}
+              >
                 {isPending ? "Đang đăng nhập..." : "Đăng nhập"}
               </Button>
 
