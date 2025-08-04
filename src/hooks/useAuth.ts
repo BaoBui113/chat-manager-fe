@@ -13,7 +13,7 @@ export const useLogin = () => {
     mutationFn: (data: LoginRequest) => authService.login(data),
     onSuccess: async (data: AuthResponse) => {
       localStorage.setItem("access_token", data.access_token);
-      //   localStorage.setItem("user", JSON.stringify(data.user));
+
       await checkAuth();
       queryClient.setQueryData(["user"], data.user);
       toast.success("Login successful!");

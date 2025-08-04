@@ -24,3 +24,15 @@ export interface User {
   sub: string;
   email: string;
 }
+
+export interface UserWithLastMessage {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  username: string;
+  email: string;
+  avatar: string;
+  lastMessage: {
+    content: string;
+  } | null;
+}
