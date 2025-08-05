@@ -8,8 +8,11 @@ export const userService = {
     return response.data;
   },
 
-  getMessages: async (userId: string): Promise<Messages[]> => {
-    const response = await api.get(`/messages/conversation/${userId}`);
+  getMessages: async (senderId: string): Promise<Messages[]> => {
+    const response = await api.get(`/messages/conversation/${senderId}`);
     return response.data;
+  },
+  sendMessage: (receiverId: string, content: string) => {
+    return api.post(`/messages`, { receiverId, content });
   },
 };

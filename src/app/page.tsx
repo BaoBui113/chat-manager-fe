@@ -10,12 +10,22 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import ListFriends from "@/components/user/listFriends";
 import MessageFriend from "@/components/user/messageFriend";
+import SendMessage from "@/components/user/sendMesasage";
 import { useAuth } from "@/contexts/AuthContext";
-import { useMessages, useUserWithLastMessage } from "@/hooks/useUser";
+import useSocket from "@/hooks/useSocket";
+import {
+  useMessages,
+  useSendMessage,
+  useUserWithLastMessage,
+} from "@/hooks/useUser";
 import { UserWithLastMessage } from "@/types/auth";
-import { MoreVertical, Phone, Search, Send, Video } from "lucide-react";
-import { useEffect, useState } from "react";
-
+import { QueryKey } from "@tanstack/react-query";
+import { MoreVertical, Phone, Search, Video } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+export function createChatQueryKey(userId1: string, userId2: string): QueryKey {
+  const sortedIds = [userId1, userId2].sort(); // đảm bảo key ổn định
+  return ["messages", sortedIds[0], sortedIds[1]];
+}
 export default function ChatApp() {
   const { data: userWithLastMessage, isPending } = useUserWithLastMessage();
   const { user } = useAuth();
@@ -24,15 +34,18 @@ export default function ChatApp() {
   const { data: messages, isPending: isMessagesPending } = useMessages(
     selectedFriend ? selectedFriend.id : ""
   );
-  console.log("messages", messages);
+
+  const { mutate: sendMessage } = useSendMessage();
 
   const [newMessage, setNewMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleSendMessage = () => {
     if (newMessage.trim() && selectedFriend) {
-      // Thêm tin nhắn mới (trong thực tế sẽ gửi lên server)
-      console.log("Gửi tin nhắn:", newMessage);
+      sendMessage({
+        content: newMessage,
+        receiverId: selectedFriend.id,
+      });
       setNewMessage("");
     }
   };
@@ -48,8 +61,24 @@ export default function ChatApp() {
     if (userWithLastMessage && userWithLastMessage.length > 0) {
       setSelectedFriend(userWithLastMessage[0]);
     }
-  }, []);
+  }, [userWithLastMessage]);
 
+  // Memoize query object
+  const socketQuery = useMemo(
+    () => ({
+      userId: user?.sub || "",
+      receiverId: selectedFriend?.id || "",
+    }),
+    [user?.sub, selectedFriend?.id]
+  );
+
+  useSocket({
+    url: "http://localhost:8000",
+    query: socketQuery,
+    invalidateKeys: [
+      createChatQueryKey(user?.sub ?? "", selectedFriend?.id ?? ""),
+    ],
+  });
   return (
     <ProtectedRoute>
       <div className="flex h-screen bg-gray-50">
@@ -148,23 +177,12 @@ export default function ChatApp() {
               </ScrollArea>
 
               {/* Khu vực nhập tin nhắn */}
-              <div className="bg-white border-t border-gray-200 p-4">
-                <div className="flex items-center space-x-2">
-                  <Input
-                    placeholder="Nhập tin nhắn..."
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    onKeyPress={handleKeyPress}
-                    className="flex-1"
-                  />
-                  <Button
-                    onClick={handleSendMessage}
-                    disabled={!newMessage.trim()}
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
+              <SendMessage
+                newMessage={newMessage}
+                setNewMessage={setNewMessage}
+                handleSendMessage={handleSendMessage}
+                handleKeyPress={handleKeyPress}
+              />
             </>
           ) : (
             <div className="flex-1 flex items-center justify-center bg-gray-50">

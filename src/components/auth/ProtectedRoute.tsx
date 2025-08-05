@@ -13,15 +13,8 @@ export default function ProtectedRoute({
   fallback,
 }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading } = useAuth();
-  console.log("isAuthenticated", isAuthenticated);
 
   const router = useRouter();
-  console.log(
-    "ProtectedRoute isAuthenticated:",
-    isAuthenticated,
-    "isLoading:",
-    isLoading
-  );
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {

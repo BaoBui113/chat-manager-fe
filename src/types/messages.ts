@@ -14,3 +14,8 @@ export interface Messages {
     email: string;
   };
 }
+
+export interface CreateMessageDto {
+  receiverId: string;
+  content: string;
+}
